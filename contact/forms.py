@@ -105,23 +105,25 @@ class RegisterForm(UserCreationForm):
     
 class RegisterUpdateForm(forms.ModelForm):
     first_name = forms.CharField(
+        min_length=2,
+        max_length=30,
         required=True,
-        max_length=3,
-        min_length=30,
-        help_text="Required.",
-        error_messages={'min_length': "Plase, add more than 2 letters"}
-
+        help_text='Required.',
+        error_messages={
+            'min_length': 'Please, add more than 2 letters.'
+        }
     )
     last_name = forms.CharField(
+        min_length=2,
+        max_length=30,
         required=True,
-        max_length=3,
-        min_length=30,
-        help_text="Required.",
+        help_text='Required.'
     )
+
     password1 = forms.CharField(
         label="Password",
         strip=False,
-        widget=forms.PasswordInput(attrs={"autocomplete": "newpassword"}),
+        widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}),
         help_text=password_validation.password_validators_help_text_html(),
         required=False,
     )
@@ -129,20 +131,22 @@ class RegisterUpdateForm(forms.ModelForm):
     password2 = forms.CharField(
         label="Password 2",
         strip=False,
-        widget=forms.PasswordInput(attrs={"autocomplete": "newpassword"}),
-        help_text='Use the same password as before',
+        widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}),
+        help_text='Use the same password as before.',
         required=False,
     )
-    
+
     class Meta:
         model = User
-        fields = ('first_name', 'last_name', 'email', 'username',)
+        fields = (
+            'first_name', 'last_name', 'email',
+            'username',
+        )
 
-    def save(self,commit=True):
+    def save(self, commit=True):
         cleaned_data = self.cleaned_data
         user = super().save(commit=False)
-
-        password = self.cleaned_data.get('password1')
+        password = cleaned_data.get('password1')
 
         if password:
             user.set_password(password)
@@ -158,9 +162,12 @@ class RegisterUpdateForm(forms.ModelForm):
 
         if password1 or password2:
             if password1 != password2:
-                self.add_error ('password2', ValidationError('Senhas Nào batem'))
+                self.add_error(
+                    'password2',
+                    ValidationError('Senhas não batem')
+                )
 
-        return super(). clean()  
+        return super().clean()
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
@@ -174,14 +181,17 @@ class RegisterUpdateForm(forms.ModelForm):
                 )
 
         return email
-    
-    def cleand_password(self):
+
+    def clean_password1(self):
         password1 = self.cleaned_data.get('password1')
 
         if password1:
             try:
                 password_validation.validate_password(password1)
             except ValidationError as errors:
-                self.add_error('password1', ValidationError(errors))
+                self.add_error(
+                    'password1',
+                    ValidationError(errors)
+                )
 
         return password1
